@@ -9,33 +9,36 @@ IMPLEMENT OTHER FILE FOR DATABASE, NOT USE GLOBAL VARIABLES!!
 pygame.init()
 pygame.font.init()
 
-myfont = pygame.font.SysFont('Segoe UI', 16)
+myfont = pygame.font.SysFont('Segoe UI', 24)
+icon = pygame.image.load("pictures/icon.png")
 
 colors = {
     "black": (0, 0, 0),
     "white": (255, 255, 255),
     "red": (255, 0, 0),
     "green": (0, 255, 0),
-    "blue": (0, 0, 255)
+    "blue": (0, 0, 255),
+    "yellow":(255,255, 0)
 }
 
-win_width = 1200
+win_width = 800
 win_height = 800
 window = pygame.display.set_mode((win_width, win_height))
 background=pygame.image.load("pictures/background.jpg")
 pygame.display.set_caption("Asteroid invader")
+pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
 
 ASTEROIDTIMER = pygame.USEREVENT + 1 # adds new event to queue named ASTEROIDTIMER, other events could be added with "pygame.USEREVENT + 2" etc.
 pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
 
-SHIP_WIDTH = 50
-SHIP_HEIGHT = 87
+SHIP_WIDTH = 56
+SHIP_HEIGHT = 60
 ASTEROID_WIDTH = 55
 ASTEROID_HEIGHT = 56
 BULLET_WIDTH = 25
 BULLET_HEIGHT = 30
-BULLET_DELAY = 0.3
+BULLET_DELAY = 0.5
 HIT_DELAY = 1
 
 score = 0
@@ -52,14 +55,14 @@ class Ship:
         self.width = width
         self.height = height
         self.mask = pygame.mask.from_surface(self.sprite)
-        self.hitbox = pygame.Rect(self.x, self.y, self.width, self.height) #make a hitbox
+        self.hitbox = pygame.Rect(self.x + 4, self.y + 2, self.width, self.height) #make a hitbox, adjust as needed with different sprites
         self.last_fire_time = time.perf_counter() #for delaying bullet fire
         self.last_collide_time = time.perf_counter()
     
     def dShip(self): #draws ship
         window.blit(self.sprite, (self.x , self.y))
-        self.hitbox = pygame.Rect(self.x, self.y, self.width, self.height) #redraw hitbox every frame
-        #pygame.draw.rect(window, colors["red"], self.hitbox, 1) #-> draw hitbox for debugging
+        self.hitbox = pygame.Rect(self.x + 4, self.y + 2, self.width, self.height) #redraw hitbox every frame
+        #pygame.draw.rect(window, colors["red"], self.hitbox, 2) #-> draw hitbox for debugging
 
     def hShip(self): #checks if ship has been moved too far in either direction
         if self.x >= win_width  - self.width: #if ship goes too far to right
@@ -100,10 +103,13 @@ class Asteroid:
         #pygame.draw.rect(window, colors["red"], self.hitbox, 1) #-> draw hitbox for debugging
 
     def hAsteroid(self): #handle asteroids
+        global health
         self.y = self.y + asteroid_speed #moving them downwards
         self.dAsteroid()
-        if self.y >= win_height + 50: #adding asteroids to be deleted to a list when they get too far off screen
+        if self.y >= win_height + 10: #adding asteroids to be deleted to a list when they get too far off screen
             deletedAsteroids.append(self)
+            health -=10
+
     def hit(self):
         global score
         score += 10
@@ -137,12 +143,21 @@ class Bullet:
 bullet_speed = 7 # speed of bullet trajectory
 asteroid_speed = 5 # controls the move speed of asteroids
 
+def text_objects(text, font):
+    textSurface = font.render(text, True, colors["white"])
+    return textSurface, textSurface.get_rect()
+
+def message_display(text):
+    large_text = pygame.font.SysFont('Segoe UI', 35)
+    text_surface, text_rect = text_objects(text, large_text)
+    text_rect.center = ((win_width / 2), (win_height / 2))
+    window.blit(text_surface, text_rect)
+
 playing = True
 
-hp_ui = myfont.render("HP: " + str(health), False, colors["red"]) # creates an object drawing our HP points
-
 while playing:
-    window.blit(hp_ui, (20, 20))
+    hp_ui = myfont.render("HP: " + str(health), True, colors["red"]) # creates an object drawing our HP points
+    score_ui = myfont.render("SCORE: " + str(score), True, colors["yellow"]) # creates an object drawing our HP points
     deletedAsteroids = []
     deletedBullets = []
     window.blit(background, (0, 0))
@@ -151,12 +166,16 @@ while playing:
 
     for event in events:
         if event.type == pygame.QUIT:
-            playing = False
+            message_display("Thank you for playing")
+            pygame.display.update()
+            time.sleep(2)
+            pygame.quit()
+            quit()
         elif event.type == ASTEROIDTIMER:
-            asteroidstartx = 500 #random.randrange(ASTEROID_WIDTH, win_width - ASTEROID_WIDTH) # random position on X line when spawning
+            asteroidstartx = random.randrange(ASTEROID_WIDTH, win_width - ASTEROID_WIDTH) # random position on X line when spawning
             newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
             newAsteroid.dAsteroid() 
-            pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #resetting our timer after it's done
+            pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1250), True) #resetting our timer after it's done
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             if (time.perf_counter() - playerShip.last_fire_time) > BULLET_DELAY: #timer for firing bullets, BULLET_DELAY is in seconds
               playerShip.last_fire_time = time.perf_counter()
@@ -196,9 +215,19 @@ while playing:
                    allAsteroids.remove(asteroid)
                    allBullets.remove(bullet)
 
+    if health == 0:
+        message_display("Game over, your score: " + str(score))
+        allAsteroids = []
+        allBullets = []
+        playerShip = Ship(win_width / 2 - SHIP_WIDTH / 2, win_height - SHIP_HEIGHT)
+        pygame.display.update()
+        time.sleep(5)
+        health = 100
+
+    
+    window.blit(hp_ui, (20, 20))
+    window.blit(score_ui, (win_width - 130, 20))
     playerShip.dShip()
     playerShip.hShip()
     pygame.display.update()
     clock.tick(60)
-pygame.quit()
-quit()
