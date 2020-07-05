@@ -5,7 +5,7 @@ import pygame
 IMPLEMENT OTHER FILE FOR DATABASE, NOT USE GLOBAL VARIABLES!!
 time.perf_counter for timer?
 '''
-
+# CHANGE 1
 pygame.init()
 
 colors = {
