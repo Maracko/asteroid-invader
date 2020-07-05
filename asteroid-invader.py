@@ -3,9 +3,7 @@ import pygame
 
 '''TODO
 IMPLEMENT OTHER FILE FOR DATABASE, NOT USE GLOBAL VARIABLES!!
-UPDATE THIS TODO WHILE WORKING
-time.perf_counter koristiti za tajmer!
-#GIT TEST
+time.perf_counter for timer?
 '''
 
 pygame.init()
