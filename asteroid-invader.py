@@ -1,5 +1,6 @@
 import random
 import pygame
+import time
 
 '''TODO
 IMPLEMENT OTHER FILE FOR DATABASE, NOT USE GLOBAL VARIABLES!!
@@ -22,7 +23,6 @@ window = pygame.display.set_mode((win_width, win_height))
 background=pygame.image.load("pictures/background.jpg")
 pygame.display.set_caption("Asteroid invader")
 clock = pygame.time.Clock()
-# CHANGE 2
 
 ASTEROIDTIMER = pygame.USEREVENT + 1 # adds new event to queue named ASTEROIDTIMER, other events could be added with "pygame.USEREVENT + 2" etc.
 pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
@@ -33,6 +33,7 @@ ASTEROID_WIDTH = 55
 ASTEROID_HEIGHT = 56
 BULLET_WIDTH = 25
 BULLET_HEIGHT = 30
+BULLET_DELAY = 0.3
 
 ship = pygame.image.load("pictures/ship.png") #sprite
 
@@ -45,14 +46,15 @@ class Ship:
         self.width = width
         self.height = height
         self.mask = pygame.mask.from_surface(self.sprite)
-        self.hitbox = (self.x, self.y, self.width, self.height) #make a hitbox 
+        self.hitbox = (self.x, self.y, self.width, self.height) #make a hitbox
+        self.last_fire_time = time.perf_counter() #for delaying bullet fire
     
     def dShip(self): #draws ship
         window.blit(self.sprite, (self.x , self.y))
         self.hitbox = (self.x, self.y, self.width, self.height) #redraw hitbox every frame
         pygame.draw.rect(window, colors["red"], self.hitbox, 1)
 
-    def cShip(self): #checks if ship has been moved too far in either direction
+    def hShip(self): #checks if ship has been moved too far in either direction
         if self.x >= win_width  - self.width: #if ship goes too far to right
             self.x = win_width - self.width 
         elif self.x <= 0: #if ship goes too far to left
@@ -114,47 +116,28 @@ class Bullet:
         pygame.draw.rect(window, colors["red"], self.hitbox, 1)
     
     def hBullet(self): #handle bullets (moving,drawing)
-        self.y = bullet.y - bullet_speed
+        self.y = self.y - bullet_speed
         self.dBullet()
         if self.y <= -50: #adding bullets to be deleted to a list when they get too far off screen
             deletedBullets.append(self)
-'''
-    def cBullet(self): #bullet collision
-        global score
-        for asteroid in allAsteroids:
-            x_offset = int(self.x - asteroid.x) # if both object1 and object2 are at same position value is 0
-            y_offset = int(self.y - asteroid.y)
-            colliding = self.mask.overlap(asteroid.mask, (x_offset, y_offset)) # if object1 and objects in list are touching returns true
-            if colliding:
-                score += 10
-                print(score)
-'''                
-'''
-class Timer:
-    def __init__(self, start):
-        self.start = start
-'''
-'''
-def sCollision(ship, asteroidlist): #ship collision
-    global score
-    #global collisioncount
-    for asteroid in asteroidlist: #for each object in objectlist
-        x_offset = int(ship.x - asteroid.x) # if both object1 and object2 are at same position value is 0
-        y_offset = int(ship.y - asteroid.y + asteroid_speed)
-        colliding = ship.mask.overlap(asteroid.mask, (x_offset, y_offset)) # if object1 and objects in list are touching returns true
-        if colliding:
-            score += 10
-            print(score)
-        #    collisioncount += 1
-        #    print(f"COLLISION {collisioncount}")
-'''
+        
+
+
+def timer(delay):
+    timing = True
+    start = time.perf_counter()
+    while timing:
+        end = time.perf_counter()
+        if end - start >= delay:
+            timing = False
+    return True
+
 bullet_speed = 7 # speed of bullet trajectory
 asteroid_speed = 5 # controls the move speed of asteroids
-collisioncount = 0
+bullet_timer = 0 #variable that will serve as a timer for when you are able to shoot (2 if statements on main loop)
 
 score = 0
 playing = True
-colliding = False
 
 while playing:
 
@@ -163,6 +146,7 @@ while playing:
     window.blit(background, (0, 0))
     events = pygame.event.get()
     pressed = pygame.key.get_pressed()
+
     for event in events:
         if event.type == pygame.QUIT:
             playing = False
@@ -172,16 +156,19 @@ while playing:
             newAsteroid.dAsteroid() 
             pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #resetting our timer after it's done
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            spawnBullet = Bullet(playerShip.x + 13, playerShip.y)
+            if (time.perf_counter() - playerShip.last_fire_time) > BULLET_DELAY: #timer for firing bullets
+              playerShip.last_fire_time = time.perf_counter()
+              spawnBullet = Bullet(playerShip.x + 13, playerShip.y)
+            
 
     if pressed[pygame.K_LEFT]: #controls
-        playerShip.x -= 10
+        playerShip.x -= 8
     if pressed[pygame.K_RIGHT]:
-        playerShip.x += 10
+        playerShip.x += 8
     if pressed[pygame.K_UP]:
-        playerShip.y -= 10
+        playerShip.y -= 8
     if pressed[pygame.K_DOWN]:
-        playerShip.y += 10
+        playerShip.y += 8
 
     for asteroid in allAsteroids: #drawing and deleting asteroids every frame
         asteroid.hAsteroid()
@@ -196,14 +183,8 @@ while playing:
         allBullets.remove(deletedbullet)
 
     playerShip.dShip()
-    playerShip.cShip()
+    playerShip.hShip()
     pygame.display.update()
     clock.tick(60)
 pygame.quit()
 quit()
-
-'''
-def sCollision(asteroidlist): #ship collision with asteroid
-    for asteroid in asteroidlist:
-        if playerShip.x > asteroid.x and ship.x < asteroid.x + ASTEROID_WIDTH
-'''
