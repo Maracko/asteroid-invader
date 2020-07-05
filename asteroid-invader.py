@@ -5,7 +5,7 @@ import pygame
 IMPLEMENT OTHER FILE FOR DATABASE, NOT USE GLOBAL VARIABLES!!
 time.perf_counter for timer?
 '''
-# CHANGE 1
+
 pygame.init()
 
 colors = {
@@ -22,7 +22,7 @@ window = pygame.display.set_mode((win_width, win_height))
 background=pygame.image.load("pictures/background.jpg")
 pygame.display.set_caption("Asteroid invader")
 clock = pygame.time.Clock()
-
+# CHANGE 2
 
 ASTEROIDTIMER = pygame.USEREVENT + 1 # adds new event to queue named ASTEROIDTIMER, other events could be added with "pygame.USEREVENT + 2" etc.
 pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
