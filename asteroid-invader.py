@@ -42,6 +42,7 @@ BULLET_DELAY = 0.5
 HIT_DELAY = 1
 
 score = 0
+high_score = 0
 health = 100
 
 ship = pygame.image.load("pictures/ship.png") #sprite
@@ -157,7 +158,8 @@ playing = True
 
 while playing:
     hp_ui = myfont.render("HP: " + str(health), True, colors["red"]) # creates an object drawing our HP points
-    score_ui = myfont.render("SCORE: " + str(score), True, colors["yellow"]) # creates an object drawing our HP points
+    score_ui = myfont.render("SCORE: " + str(score), True, colors["white"])
+    high_score_ui = myfont.render("HIGH SCORE: " + str(high_score), True, colors["white"]) # creates an object drawing our HP points
     deletedAsteroids = []
     deletedBullets = []
     window.blit(background, (0, 0))
@@ -217,6 +219,9 @@ while playing:
 
     if health == 0:
         message_display("Game over, your score: " + str(score))
+        if score >= high_score:
+            high_score = score
+        score = 0
         allAsteroids = []
         allBullets = []
         playerShip = Ship(win_width / 2 - SHIP_WIDTH / 2, win_height - SHIP_HEIGHT)
@@ -225,8 +230,9 @@ while playing:
         health = 100
 
     
-    window.blit(hp_ui, (20, 20))
-    window.blit(score_ui, (win_width - 130, 20))
+    window.blit(hp_ui, (40, 20))
+    window.blit(score_ui, (win_width - 230, 20))
+    window.blit(high_score_ui, (win_width - 230, 50))
     playerShip.dShip()
     playerShip.hShip()
     pygame.display.update()
