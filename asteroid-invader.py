@@ -5,6 +5,7 @@ import pygame
 IMPLEMENT OTHER FILE FOR DATABASE, NOT USE GLOBAL VARIABLES!!
 UPDATE THIS TODO WHILE WORKING
 time.perf_counter koristiti za tajmer!
+#GIT TEST
 '''
 
 pygame.init()
