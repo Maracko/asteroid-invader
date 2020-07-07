@@ -1,6 +1,8 @@
 import random
 import pygame
 import time
+import os
+import sys
 from config import *
 
 pygame.init()
@@ -15,17 +17,27 @@ colors = {
     "yellow":(255,255, 0)
 }
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
 uifont = pygame.font.SysFont('Segoe UI', 24)
-icon = pygame.image.load("pictures/icon.png")
+icon = pygame.image.load(resource_path("pictures/icon.png"))
 
 window = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
-background = pygame.image.load("pictures/background.jpg")
+background = pygame.image.load(resource_path("pictures/background.jpg"))
 pygame.display.set_caption("Asteroid invader")
 pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
 
 
-ship = pygame.image.load("pictures/ship.png") #sprite
+ship = pygame.image.load(resource_path("pictures/ship.png")) #sprite
 
 ASTEROIDTIMER = pygame.USEREVENT + 1 # adds new event to queue named ASTEROIDTIMER, other events could be added with "pygame.USEREVENT + 2" etc.
 pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
@@ -64,8 +76,8 @@ class Ship:
 
 playerShip = Ship(WIN_WIDTH / 2 - SHIP_WIDTH / 2, WIN_HEIGHT - SHIP_HEIGHT)
 
-asteroid1 = pygame.image.load("pictures/asteroid-medium.png")
-asteroid2 = pygame.image.load("pictures/asteroid-medium-mineral.png")
+asteroid1 = pygame.image.load(resource_path("pictures/asteroid-medium.png"))
+asteroid2 = pygame.image.load(resource_path("pictures/asteroid-medium-mineral.png"))
 asteroids = [asteroid1, asteroid2]
 allAsteroids = [] # list of all asteroid objects
 
@@ -99,7 +111,7 @@ class Asteroid:
         score += 10
         print("Score:" + str(score))
 
-bullet=pygame.image.load("pictures/bullet.png")
+bullet=pygame.image.load(resource_path("pictures/bullet.png"))
 allBullets = []
 
 class Bullet:
