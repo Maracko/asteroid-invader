@@ -167,7 +167,6 @@ if __name__ == "__main__":
                 pygame.display.update()
                 time.sleep(2)
                 pygame.quit()
-                quit()
             elif event.type == ASTEROIDTIMER:
                 asteroidstartx = random.randrange(ASTEROID_WIDTH, WIN_WIDTH - ASTEROID_WIDTH) # random position on X line when spawning
                 newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
@@ -221,7 +220,7 @@ if __name__ == "__main__":
             allBullets = []
             playerShip = Ship(WIN_WIDTH / 2 - SHIP_WIDTH / 2, WIN_HEIGHT - SHIP_HEIGHT)
             pygame.display.update()
-            time.sleep(5)
+            time.sleep(2)
             health = 100
 
         
