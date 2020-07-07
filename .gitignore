@@ -1,6 +1,6 @@
+.gitignore
 .venv/
 .vscode/
 .mypy_cache/
 __pycache__/
-.gitignore
-deleted_code.py
+asteroid-invader-build-config.json
