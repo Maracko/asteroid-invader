@@ -178,14 +178,14 @@ if __name__ == "__main__":
                     playerShip.last_fire_time = time.perf_counter()
                     spawnBullet = Bullet(playerShip.x + 20 , playerShip.y)
             
-            if pressed[pygame.K_LEFT]: #controls
-                playerShip.x -= 8
-            if pressed[pygame.K_RIGHT]:
-                playerShip.x += 8
-            if pressed[pygame.K_UP]:
-                playerShip.y -= 8
-            if pressed[pygame.K_DOWN]:
-                playerShip.y += 8
+        if pressed[pygame.K_LEFT]: #controls
+            playerShip.x -= 8
+        if pressed[pygame.K_RIGHT]:
+            playerShip.x += 8
+        if pressed[pygame.K_UP]:
+            playerShip.y -= 8
+        if pressed[pygame.K_DOWN]:
+            playerShip.y += 8
 
         for asteroid in allAsteroids: 
             asteroid.hAsteroid() #drawing and deleting asteroids every frame
@@ -206,8 +206,8 @@ if __name__ == "__main__":
             bullet.hBullet()
             for asteroid in allAsteroids: 
                 if bullet.hitbox.colliderect(asteroid.hitbox): #utilizing our hitboxes to detect collision between bullets and asteroids
-            #if bullet.hitbox[1] - bullet.hitbox[3] < asteroid.hitbox[1] + asteroid.hitbox[3] and bullet.hitbox[1] + bullet.hitbox[3] > asteroid.hitbox[1]: -> ###now obsolete, used before I discovered .colliderect###
-            #    if bullet.hitbox[0] + bullet.hitbox[2] > asteroid.hitbox[0] and bullet.hitbox[0] - bullet.hitbox[2]  < asteroid.hitbox[0] + asteroid.hitbox[2] / 2:
+                #if bullet.hitbox[1] - bullet.hitbox[3] < asteroid.hitbox[1] + asteroid.hitbox[3] and bullet.hitbox[1] + bullet.hitbox[3] > asteroid.hitbox[1]: -> ###now obsolete, used before I discovered .colliderect###
+                #   if bullet.hitbox[0] + bullet.hitbox[2] > asteroid.hitbox[0] and bullet.hitbox[0] - bullet.hitbox[2]  < asteroid.hitbox[0] + asteroid.hitbox[2] / 2:
                     asteroid.hit()
                     allAsteroids.remove(asteroid)
                     allBullets.remove(bullet)
