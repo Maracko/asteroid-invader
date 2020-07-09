@@ -6,7 +6,6 @@ import sys
 from config import *
 
 pygame.init()
-pygame.font.init()
 
 colors = {
     "black": (0, 0, 0),
@@ -39,20 +38,20 @@ clock = pygame.time.Clock()
 ship = pygame.image.load(resource_path("pictures/ship.png")) #sprite
 
 ASTEROIDTIMER = pygame.USEREVENT + 1 # adds new event to queue named ASTEROIDTIMER, other events could be added with "pygame.USEREVENT + 2" etc.
-pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
 
 '''
 #MUSIC CREDITS#
 Solar System by Kraftamt (c) copyright 2020 Licensed under a Creative Commons Attribution Noncommercial  (3.0) license. http://dig.ccmixter.org/files/Karstenholymoly/61117 Ft: Wired Ant
 Moments in Space by spinmeister (c) copyright 2007 Licensed under a Creative Commons Attribution (3.0) license. http://dig.ccmixter.org/files/spinmeister/12093 Ft: DJ Rkod
 '''
+
 songs = ["music/Karstenholymoly-Solar_System.mp3","music/spinmeister-Moments_in_Space_2.mp3"]
 currently_playing_song = None # sets the song that is playing, at start it is none
 END_MUSIC = pygame.USEREVENT + 2 #creating an event for when music ends
 pygame.mixer.music.set_endevent(END_MUSIC) #setting that event to happen every time a song ends
 
 def play_music():
-    '''Will play a random song from the list that is not the currently playing one'''
+    '''Will play a random song from the list of songs that is not the currently playing one'''
     global currently_playing_song, songs
     next_song = random.choice(songs)
     while next_song == currently_playing_song:
@@ -64,11 +63,12 @@ def play_music():
 play_music()
 
 ###sound effects###
-
 asteroid_hit = pygame.mixer.Sound('music/asteroid-hit.wav')
 asteroid_hit.set_volume(0.2)
 ship_damage = pygame.mixer.Sound('music/ship-damage.wav')
 ship_damage.set_volume(0.5)
+asteroid_miss = pygame.mixer.Sound('music/missed-asteroid.wav')
+asteroid_miss.set_volume(0.5)
 
 class Ship:
 
@@ -78,7 +78,6 @@ class Ship:
         self.sprite = sprite
         self.width = width
         self.height = height
-        self.mask = pygame.mask.from_surface(self.sprite)
         self.hitbox = pygame.Rect(self.x + 4, self.y + 2, self.width, self.height) #make a hitbox, adjust as needed with different sprites
         self.last_fire_time = time.perf_counter() #for delaying bullet fire
         self.last_collide_time = time.perf_counter()
@@ -115,7 +114,6 @@ class Asteroid:
         self.sprite = sprite
         self.width = width
         self.height = height
-        self.mask = pygame.mask.from_surface(self.sprite)
         self.hitbox = pygame.Rect(self.x + 6, self.y + 6, self.width - 4, self.height) # asteroid hitbox had to be corrected a little bit
         allAsteroids.append(self) #appends every new asteroid to list of all asteroids so we can manipulate them
         
@@ -131,12 +129,19 @@ class Asteroid:
         if self.y >= WIN_HEIGHT + 10: #adding asteroids to be deleted to a list when they get too far off screen
             deletedAsteroids.append(self)
             health -=10
-            ship_damage.play()
+            asteroid_miss.play()
 
     def hit(self): #when bullet hits asteroid
         global score
-        score += 10
-        asteroid_hit.play()
+        if level == 1:
+            score += 15
+            asteroid_hit.play()
+        if level == 2:
+            score += 20
+            asteroid_hit.play()
+        if level == 3:
+            score += 30
+            asteroid_hit.play()
 
 bullet=pygame.image.load(resource_path("pictures/bullet.png"))
 allBullets = []
@@ -174,19 +179,65 @@ def message_display(text):
     text_rect.center = ((WIN_WIDTH / 2), (WIN_HEIGHT / 2))
     window.blit(text_surface, text_rect)
 
-if __name__ == "__main__":
-
-    playing = True
-    
-    while playing:
-        hp_ui = uifont.render("HP: " + str(health), True, colors["red"]) # creates an object drawing our HP points
+def draw_ui():
+        hp_ui = uifont.render("HP: " + str(health), True, colors["green"]) #creates object that stores our UI/Font
         score_ui = uifont.render("SCORE: " + str(score), True, colors["white"])
-        high_score_ui = uifont.render("HIGH SCORE: " + str(high_score), True, colors["white"]) # creates an object drawing our HP points
+        high_score_ui = uifont.render("HIGH SCORE: " + str(high_score), True, colors["white"]) 
+        level_ui = uifont.render("LEVEL: " + str(level), True, colors["white"]) 
+        window.blit(hp_ui, (40, 20)) #renders the UI
+        window.blit(score_ui, (WIN_WIDTH - 230, 20))
+        window.blit(high_score_ui, (WIN_WIDTH - 230, 50))
+        window.blit(level_ui, (WIN_WIDTH - 230, 80))
+
+def main_menu():
+
+    menu_font = pygame.font.SysFont('Segoe UI', 48)
+    run = True
+
+    while run:
+
+        pressed = pygame.key.get_pressed()
+        window.blit(background, (0,0))
+        title = menu_font.render("Press enter to begin...", 1, colors["white"])
+        window.blit(title, (WIN_WIDTH/2 - title.get_width()/2, 350))
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            if pressed[pygame.K_RETURN]:
+                main()
+
+def set_level(): #increasing difficulty
+    global score, level, ASTEROID_SPEED
+    if score >= 0 and score <= 300:
+        level = 1
+        ASTEROID_SPEED = 5
+        return 1
+    elif score > 300 and score <= 700:
+        level = 2
+        ASTEROID_SPEED = 6
+        return 2
+    elif score > 600 and score <= 900:
+        level = 3
+        ASTEROID_SPEED = 7
+        return 3
+
+
+def main():
+
+    global health, score, high_score, allAsteroids, allBullets, playerShip, deletedBullets, deletedAsteroids, ASTEROIDTIMER, level
+    pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
+    playing = True
+
+    while playing:
+
         deletedAsteroids = []
         deletedBullets = []
         window.blit(background, (0, 0))
         events = pygame.event.get()
         pressed = pygame.key.get_pressed()
+
 
         for event in events:
             if event.type == pygame.QUIT:
@@ -196,24 +247,35 @@ if __name__ == "__main__":
                 time.sleep(2)
                 pygame.quit()
             if event.type == ASTEROIDTIMER:
-                asteroidstartx = random.randrange(ASTEROID_WIDTH, WIN_WIDTH - ASTEROID_WIDTH) # random position on X line when spawning
-                newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
-                newAsteroid.dAsteroid() 
-                pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True)
+                if level == 1:
+                    asteroidstartx = random.randrange(ASTEROID_WIDTH, WIN_WIDTH - ASTEROID_WIDTH) # random position on X line when spawning
+                    newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
+                    newAsteroid.dAsteroid() 
+                    pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True)
+                if level == 2:
+                    asteroidstartx = random.randrange(ASTEROID_WIDTH, WIN_WIDTH - ASTEROID_WIDTH) # random position on X line when spawning
+                    newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
+                    newAsteroid.dAsteroid() 
+                    pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1250), True)
+                if level == 3:
+                    asteroidstartx = random.randrange(ASTEROID_WIDTH, WIN_WIDTH - ASTEROID_WIDTH) # random position on X line when spawning
+                    newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
+                    newAsteroid.dAsteroid() 
+                    pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1000), True)
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
                 if (time.perf_counter() - playerShip.last_fire_time) > BULLET_DELAY: #timer for firing bullets, BULLET_DELAY is in seconds
                     playerShip.last_fire_time = time.perf_counter()
                     spawnBullet = Bullet(playerShip.x + 20 , playerShip.y)
-            if event.type == END_MUSIC:
+            if event.type == END_MUSIC: #when music ends, chooses another song
                 play_music()
             
-        if pressed[pygame.K_LEFT]: #controls
+        if pressed[pygame.K_LEFT] or pressed[pygame.K_a]: #controls
             playerShip.x -= 8
-        if pressed[pygame.K_RIGHT]:
+        if pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
             playerShip.x += 8
-        if pressed[pygame.K_UP]:
+        if pressed[pygame.K_UP] or pressed[pygame.K_w]:
             playerShip.y -= 8
-        if pressed[pygame.K_DOWN]:
+        if pressed[pygame.K_DOWN] or pressed[pygame.K_s]:
             playerShip.y += 8
 
         for asteroid in allAsteroids: 
@@ -253,10 +315,14 @@ if __name__ == "__main__":
             time.sleep(2)
             health = 100
 
-        window.blit(hp_ui, (40, 20))
-        window.blit(score_ui, (WIN_WIDTH - 230, 20))
-        window.blit(high_score_ui, (WIN_WIDTH - 230, 50))
+        draw_ui()
         playerShip.dShip()
         playerShip.hShip()
+        set_level()
         pygame.display.update()
         clock.tick(60)
+
+
+if __name__ == "__main__":
+    main_menu()
+    

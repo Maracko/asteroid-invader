@@ -9,9 +9,10 @@ BULLET_HEIGHT = 30
 
 BULLET_DELAY = 0.5
 HIT_DELAY = 1 #max hits per second
-BULLET_SPEED = 7 # speed of bullet trajectory
+BULLET_SPEED = 5 # speed of bullet trajectory
 ASTEROID_SPEED = 5 # controls the move speed of asteroids
 
 score = 0
 high_score = 0
 health = 100
+level = 1
