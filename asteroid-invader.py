@@ -63,6 +63,13 @@ def play_music():
 
 play_music()
 
+###sound effects###
+
+asteroid_hit = pygame.mixer.Sound('music/asteroid-hit.wav')
+asteroid_hit.set_volume(0.2)
+ship_damage = pygame.mixer.Sound('music/ship-damage.wav')
+ship_damage.set_volume(0.5)
+
 class Ship:
 
     def __init__(self, x, y, sprite = ship, width = SHIP_WIDTH, height = SHIP_HEIGHT):
@@ -92,8 +99,6 @@ class Ship:
             self.y = 0
         return None
     
-    def hit(self):
-        global health
 
 playerShip = Ship(WIN_WIDTH / 2 - SHIP_WIDTH / 2, WIN_HEIGHT - SHIP_HEIGHT)
 
@@ -126,11 +131,12 @@ class Asteroid:
         if self.y >= WIN_HEIGHT + 10: #adding asteroids to be deleted to a list when they get too far off screen
             deletedAsteroids.append(self)
             health -=10
+            ship_damage.play()
 
-    def hit(self):
+    def hit(self): #when bullet hits asteroid
         global score
         score += 10
-        print("Score:" + str(score))
+        asteroid_hit.play()
 
 bullet=pygame.image.load(resource_path("pictures/bullet.png"))
 allBullets = []
@@ -215,7 +221,7 @@ if __name__ == "__main__":
             if asteroid.hitbox.colliderect(playerShip.hitbox):
                 if (time.perf_counter() - playerShip.last_collide_time) > HIT_DELAY: #prevents very fast collision detection
                     playerShip.last_collide_time = time.perf_counter()
-                    playerShip.hit()
+                    ship_damage.play()
                     health -= 10
 
         for deletedasteroid in deletedAsteroids: #delete all the asteroids that have been placed in the deletedasteroids list
