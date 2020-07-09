@@ -36,11 +36,32 @@ pygame.display.set_caption("Asteroid invader")
 pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
 
-
 ship = pygame.image.load(resource_path("pictures/ship.png")) #sprite
 
 ASTEROIDTIMER = pygame.USEREVENT + 1 # adds new event to queue named ASTEROIDTIMER, other events could be added with "pygame.USEREVENT + 2" etc.
 pygame.time.set_timer(ASTEROIDTIMER, random.randint(750, 1500), True) #executes ASTEROIDTIMER event for spawning asteroid  every 1 - 3 seconds, added to main loop as well since it only runs once
+
+'''
+#MUSIC CREDITS#
+Solar System by Kraftamt (c) copyright 2020 Licensed under a Creative Commons Attribution Noncommercial  (3.0) license. http://dig.ccmixter.org/files/Karstenholymoly/61117 Ft: Wired Ant
+Moments in Space by spinmeister (c) copyright 2007 Licensed under a Creative Commons Attribution (3.0) license. http://dig.ccmixter.org/files/spinmeister/12093 Ft: DJ Rkod
+'''
+songs = ["music/Karstenholymoly-Solar_System.mp3","music/spinmeister-Moments_in_Space_2.mp3"]
+currently_playing_song = None # sets the song that is playing, at start it is none
+END_MUSIC = pygame.USEREVENT + 2 #creating an event for when music ends
+pygame.mixer.music.set_endevent(END_MUSIC) #setting that event to happen every time a song ends
+
+def play_music():
+    '''Will play a random song from the list that is not the currently playing one'''
+    global currently_playing_song, songs
+    next_song = random.choice(songs)
+    while next_song == currently_playing_song:
+        next_song = random.choice(songs)
+    currently_playing_song = next_song
+    pygame.mixer.music.load(next_song)
+    pygame.mixer.music.play()
+
+play_music()
 
 class Ship:
 
@@ -135,7 +156,7 @@ class Bullet:
         self.dBullet()
         if self.y <= -50: #adding bullets to be deleted to a list when they get too far off screen
             deletedBullets.append(self)
-        
+
 
 def text_objects(text, font):
     textSurface = font.render(text, True, colors["white"])
@@ -150,7 +171,7 @@ def message_display(text):
 if __name__ == "__main__":
 
     playing = True
-
+    
     while playing:
         hp_ui = uifont.render("HP: " + str(health), True, colors["red"]) # creates an object drawing our HP points
         score_ui = uifont.render("SCORE: " + str(score), True, colors["white"])
@@ -164,10 +185,11 @@ if __name__ == "__main__":
         for event in events:
             if event.type == pygame.QUIT:
                 message_display("Thank you for playing")
+                pygame.mixer.music.fadeout(500)
                 pygame.display.update()
                 time.sleep(2)
                 pygame.quit()
-            elif event.type == ASTEROIDTIMER:
+            if event.type == ASTEROIDTIMER:
                 asteroidstartx = random.randrange(ASTEROID_WIDTH, WIN_WIDTH - ASTEROID_WIDTH) # random position on X line when spawning
                 newAsteroid = Asteroid(asteroidstartx, 20, random.choice(asteroids))
                 newAsteroid.dAsteroid() 
@@ -176,6 +198,8 @@ if __name__ == "__main__":
                 if (time.perf_counter() - playerShip.last_fire_time) > BULLET_DELAY: #timer for firing bullets, BULLET_DELAY is in seconds
                     playerShip.last_fire_time = time.perf_counter()
                     spawnBullet = Bullet(playerShip.x + 20 , playerShip.y)
+            if event.type == END_MUSIC:
+                play_music()
             
         if pressed[pygame.K_LEFT]: #controls
             playerShip.x -= 8
@@ -193,13 +217,9 @@ if __name__ == "__main__":
                     playerShip.last_collide_time = time.perf_counter()
                     playerShip.hit()
                     health -= 10
-                    print(health)
 
         for deletedasteroid in deletedAsteroids: #delete all the asteroids that have been placed in the deletedasteroids list
             allAsteroids.remove(deletedasteroid)
-
-        for deletedbullet in deletedBullets: #delete all the bullets that have been placed in the deletedbullets list
-            allBullets.remove(deletedbullet)
 
         for bullet in allBullets:
             bullet.hBullet()
@@ -211,8 +231,12 @@ if __name__ == "__main__":
                     allAsteroids.remove(asteroid)
                     allBullets.remove(bullet)
 
+        for deletedbullet in deletedBullets: #delete all the bullets that have been placed in the deletedbullets list
+            allBullets.remove(deletedbullet)
+
         if health == 0:
             message_display("Game over, your score: " + str(score))
+            pygame.mixer.music.fadeout(500) #fades out our music on game over (also bc of END_MUSIC event also new song starts on new game)
             if score >= high_score:
                 high_score = score
             score = 0
@@ -223,7 +247,6 @@ if __name__ == "__main__":
             time.sleep(2)
             health = 100
 
-        
         window.blit(hp_ui, (40, 20))
         window.blit(score_ui, (WIN_WIDTH - 230, 20))
         window.blit(high_score_ui, (WIN_WIDTH - 230, 50))

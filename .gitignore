@@ -1,0 +1,7 @@
+.venv/
+.vscode/
+.mypy_cache/
+__pycache__/
+asteroid-invader-build-config.json
+Pipfile
+Pipfile.lock
